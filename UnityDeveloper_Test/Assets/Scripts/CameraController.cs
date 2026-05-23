@@ -3,55 +3,60 @@ using UnityEngine;
 public class CameraController : MonoBehaviour
 {
     [SerializeField] private Camera _camera;
+    [SerializeField] private Transform cameraPivot;
     [SerializeField] private Transform _followTarget;
     [SerializeField] private float maxDistance;
     [SerializeField] private float targetDistance;
     [SerializeField] private float minDistance;
+    [SerializeField] private LayerMask collisionLayers;
 
-    [SerializeField] private Vector3 frameForward;
-    [SerializeField] private Vector3 frameUp;
+    private bool cameraFollowEnabled;
+    private Vector3 cameraOffset;
 
     private void Start ( )
     {
-	   GravityManipulator.GravityDirectionChanged += OnGravityDirectionChanged;
+	   InitializeCamera ( );
+	   cameraOffset = _followTarget.position - transform.position;
+    }
 
-	   frameForward = _followTarget.forward;
-	   frameUp = _followTarget.up;
+    public void InitializeCamera ( )
+    {
+	   cameraFollowEnabled = true;
+    }
+
+    private void Update ( )
+    {
+	   if ( !cameraFollowEnabled )
+	   {
+		  return;
+	   }
     }
 
     private void LateUpdate ( )
     {
-	   Quaternion targetRotation = Quaternion.LookRotation ( frameForward, frameUp );
+	   Quaternion targetRotation = Quaternion.LookRotation ( _followTarget.forward, _followTarget.up );
 	   transform.rotation = Quaternion.Slerp ( transform.rotation, targetRotation, 15f * Time.deltaTime );
 
-	   Vector3 moveTo = _followTarget.position - transform.position;
-	   transform.position += Vector3.MoveTowards ( Vector3.zero, moveTo, moveTo.magnitude * Time.deltaTime );
+	   //Vector3 moveVector = _followTarget.position - transform.position;
+	   //transform.position += Vector3.MoveTowards ( Vector3.zero, moveVector, 1.5f * moveVector.magnitude * Time.deltaTime );
+
+	   transform.position = _followTarget.position - cameraOffset;
+
 	   RepositionCamera ( );
     }
 
     private void RepositionCamera ( )
     {
-	   Ray ray = new ( transform.position, -transform.forward );
+	   Ray ray = new ( cameraPivot.position, -cameraPivot.forward );
 	   float currentDistance = targetDistance;
 
 	   targetDistance = maxDistance;
 
-	   if ( Physics.SphereCast ( ray, 0.1f, out RaycastHit hit, maxDistance ) )
+	   if ( Physics.SphereCast ( ray, 0.1f, out RaycastHit hit, maxDistance, collisionLayers ) )
 	   {
 		  targetDistance = hit.distance < minDistance ? minDistance : hit.distance;
 	   }
 
 	   _camera.transform.localPosition = Vector3.back * targetDistance;
-    }
-
-    private void OnGravityDirectionChanged ( Vector3 forward, Vector3 up )
-    {
-	   frameForward = forward;
-	   frameUp = up;
-    }
-
-    private void OnDestroy ( )
-    {
-	   GravityManipulator.GravityDirectionChanged -= OnGravityDirectionChanged;
     }
 }

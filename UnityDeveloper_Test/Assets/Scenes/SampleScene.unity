@@ -193,7 +193,7 @@ GameObject:
   - component: {fileID: 65844741}
   - component: {fileID: 65844740}
   - component: {fileID: 65844739}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Cube (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -772,7 +772,8 @@ GameObject:
   - component: {fileID: 248651448}
   - component: {fileID: 248651446}
   - component: {fileID: 248651445}
-  m_Layer: 0
+  - component: {fileID: 248651449}
+  m_Layer: 8
   m_Name: Player
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -809,13 +810,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6e360bbade4902048ba2e798f52abaf4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
-  moveForce: 5
-  jumpForce: 20
+  moveForce: 10
+  jumpForce: 2
   gravityMagnitude: 10
-  moveDirection: {x: 0, y: 0, z: 0}
-  gravityDirection: {x: 0, y: 0, z: 0}
-  frameForward: {x: 0, y: 0, z: 0}
-  frameUp: {x: 0, y: 0, z: 0}
+  playerRotationSpeed: 1
+  myAnimator: {fileID: 919132149603880274}
 --- !u!114 &248651446
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -828,7 +827,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1bdbaee64eadd8f489aeef2a606aadcb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Player
-  playerPreview: {fileID: 1628940703}
+  playerMovement: {fileID: 248651445}
+  playerPreview: {fileID: 248651449}
 --- !u!136 &248651447
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -861,8 +861,8 @@ Rigidbody:
   m_GameObject: {fileID: 248651442}
   serializedVersion: 5
   m_Mass: 1
-  m_LinearDamping: 0
-  m_AngularDamping: 0.05
+  m_LinearDamping: 0.5
+  m_AngularDamping: 0.5
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
   m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
@@ -877,8 +877,21 @@ Rigidbody:
   m_UseGravity: 0
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 80
+  m_Constraints: 112
   m_CollisionDetection: 0
+--- !u!114 &248651449
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 248651442}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a44cb3949d19c0b41a7741cbf5ab9c33, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerPreview
+  playerPreviewVisual: {fileID: 1628940703}
 --- !u!1 &263821229
 GameObject:
   m_ObjectHideFlags: 0
@@ -1129,12 +1142,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.043619405, y: 0, z: 0, w: 0.9990483}
+  m_LocalRotation: {x: 0.043619405, y: -0, z: -0, w: 0.9990483}
   m_LocalPosition: {x: 0, y: 0.5, z: -4}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1366239160}
+  m_Father: {fileID: 2096978331}
   m_LocalEulerAnglesHint: {x: 5, y: 0, z: 0}
 --- !u!114 &330585547
 MonoBehaviour:
@@ -2224,7 +2237,7 @@ GameObject:
   - component: {fileID: 615942172}
   - component: {fileID: 615942171}
   - component: {fileID: 615942170}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Cube
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2943,7 +2956,7 @@ GameObject:
   - component: {fileID: 797982803}
   - component: {fileID: 797982802}
   - component: {fileID: 797982801}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Cube (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4509,7 +4522,7 @@ GameObject:
   - component: {fileID: 1199855528}
   - component: {fileID: 1199855527}
   - component: {fileID: 1199855526}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Cube (4)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5206,7 +5219,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 330585546}
+  - {fileID: 2096978331}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!114 &1366239161
@@ -5222,12 +5235,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraController
   _camera: {fileID: 330585545}
+  cameraPivot: {fileID: 2096978331}
   _followTarget: {fileID: 1352399154}
   maxDistance: 4
   targetDistance: 0
-  minDistance: 1
-  frameForward: {x: 0, y: 0, z: 0}
-  frameUp: {x: 0, y: 0, z: 0}
+  minDistance: 0.5
+  collisionLayers:
+    serializedVersion: 2
+    m_Bits: 247
 --- !u!1 &1368460057
 GameObject:
   m_ObjectHideFlags: 0
@@ -6245,7 +6260,7 @@ GameObject:
   - component: {fileID: 1705895573}
   - component: {fileID: 1705895572}
   - component: {fileID: 1705895571}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Cube (3)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6841,6 +6856,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   exit: {fileID: 5798317691047180553, guid: 75c571deb967a064ba7538e6307883dd, type: 3}
+  roundTimeMax: 120
 --- !u!114 &1849446521
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6865,13 +6881,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a593fe6526a963b428ae3063d36cc636, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GravityManipulator
+  player: {fileID: 248651446}
   gravityChange: {fileID: -7679169289410041523, guid: 75c571deb967a064ba7538e6307883dd,
     type: 3}
   gravitySet: {fileID: 175472026258897147, guid: 75c571deb967a064ba7538e6307883dd,
     type: 3}
-  up: {x: 0, y: 1, z: 0}
-  forward: {x: 0, y: 0, z: -1}
-  right: {x: -1, y: 0, z: 0}
 --- !u!1 &1851503156
 GameObject:
   m_ObjectHideFlags: 0
@@ -7378,6 +7392,38 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 666896910}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2096978330
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2096978331}
+  m_Layer: 0
+  m_Name: CameraPivot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2096978331
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2096978330}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 330585546}
+  m_Father: {fileID: 1366239160}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2101017235
 GameObject:

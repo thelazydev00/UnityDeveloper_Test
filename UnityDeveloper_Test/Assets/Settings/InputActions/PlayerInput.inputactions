@@ -200,7 +200,7 @@
                     "path": "<Keyboard>/escape",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": ";KeyboardAndMouse",
                     "action": "quit",
                     "isComposite": false,
                     "isPartOfComposite": false
@@ -211,7 +211,7 @@
                     "path": "<Mouse>/delta",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": ";KeyboardAndMouse",
                     "action": "mouseLook",
                     "isComposite": false,
                     "isPartOfComposite": false
@@ -222,7 +222,7 @@
                     "path": "<Keyboard>/space",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": ";KeyboardAndMouse",
                     "action": "jump",
                     "isComposite": false,
                     "isPartOfComposite": false

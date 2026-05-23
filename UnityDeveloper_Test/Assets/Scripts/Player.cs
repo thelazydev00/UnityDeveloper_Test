@@ -2,45 +2,17 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    [SerializeField] private GameObject playerPreview;
-
-    private Vector3 displayDirection;
-
-    private Vector3 forward;
-    private Vector3 right;
+    [SerializeField] private PlayerMovement playerMovement;
+    [SerializeField] private PlayerPreview playerPreview;
 
     private void Start ( )
     {
-	   playerPreview.SetActive ( false );
-
-	   transform.localRotation = Quaternion.identity;
+	   InitializePlayer ( );
     }
 
-    private void OnGravityChangePreview ( Vector2 _v )
+    public void InitializePlayer ( )
     {
-	   playerPreview.SetActive ( true );
-
-	   if ( _v.x > 0 )
-	   {
-		  displayDirection = -right;
-	   }
-	   else if ( _v.x < 0 )
-	   {
-		  displayDirection = right;
-	   }
-	   else if ( _v.y > 0 )
-	   {
-		  displayDirection = forward;
-	   }
-	   else if ( _v.y < 0 )
-	   {
-		  displayDirection = -forward;
-	   }
-	   else
-	   {
-		  playerPreview.SetActive ( false );
-		  playerPreview.transform.localRotation = Quaternion.identity;
-		  return;
-	   }
+	   playerMovement.InitializePlayerMovement ( );
+	   playerPreview.InitializePlayerPreview ( );
     }
 }

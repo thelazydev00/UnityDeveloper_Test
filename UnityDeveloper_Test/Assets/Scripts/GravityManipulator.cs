@@ -3,16 +3,25 @@ using UnityEngine.InputSystem;
 
 public class GravityManipulator : MonoBehaviour
 {
+    [SerializeField] private Player player;
     [SerializeField] private InputActionReference gravityChange;
     [SerializeField] private InputActionReference gravitySet;
 
-    private Vector3 cached;
-    private static Vector3 gravityDirection = Vector3.down;
+    private Vector3 gravityDirection = Vector3.down;
+    private Vector3 targetGravityDirection = Vector3.down;
+
+    public static System.Func<Vector3, Vector3, bool> PreviewGravityDirectionChange;
     public static System.Action<Vector3, Vector3> GravityDirectionChanged;
 
-    [SerializeField] private Vector3 up = Vector3.up;
-    [SerializeField] private Vector3 forward = Vector3.forward;
-    [SerializeField] private Vector3 right = Vector3.right;
+    private Vector3 targetUp = Vector3.up;
+    private Vector3 targetForward = Vector3.forward;
+    private Vector3 targetRight = Vector3.right;
+
+    private Vector3 up;
+    private Vector3 forward;
+    private Vector3 right;
+
+    private bool allowGravityChange = true;
 
     private void OnEnable ( )
     {
@@ -35,29 +44,70 @@ public class GravityManipulator : MonoBehaviour
 
     private void Start ( )
     {
-	   UpdateAxes ( );
+	   InitializeGravityManipulator ( );
     }
 
-    private void UpdateAxes ( )
+    public void InitializeGravityManipulator ( )
     {
-	   up = -gravityDirection;
+	   targetUp = player.transform.up;
+	   targetForward = player.transform.forward;
 
-	   forward = Vector3.ProjectOnPlane ( forward, up ).normalized;
+	   UpdateTargetAxes ( );
+	   UpdatePlayerGravityAxesAfterPreview ( );
+    }
 
-	   if ( forward.sqrMagnitude < 0.01f )
+    private void UpdateTargetAxes ( )
+    {
+	   targetGravityDirection = SnapToAxis ( targetGravityDirection );
+
+	   targetUp = -targetGravityDirection;
+
+	   targetForward = Vector3.ProjectOnPlane ( player.transform.forward, targetUp ).normalized;
+
+	   if ( targetForward.sqrMagnitude < 0.01f )
 	   {
-		  forward = Vector3.Cross ( up, Vector3.right );
+		  targetForward = Vector3.Cross ( targetUp, Vector3.right );
 
-		  if ( forward.sqrMagnitude < 0.01f )
-			 forward = Vector3.Cross ( up, Vector3.forward );
+		  if ( targetForward.sqrMagnitude < 0.01f )
+			 targetForward = Vector3.Cross ( targetUp, Vector3.forward );
 
-		  forward.Normalize ( );
+		  targetForward.Normalize ( );
 	   }
 
-	   right = Vector3.Cross ( forward, up ).normalized;
-	   forward = Vector3.Cross ( up, right ).normalized;
+	   //targetRight = Vector3.Cross ( targetForward, targetUp ).normalized;
+	   //targetForward = Vector3.Cross ( targetUp, targetRight ).normalized;
+
+	   targetRight = Vector3.Cross ( targetUp, targetForward ).normalized;
+	   targetForward = Vector3.Cross ( targetRight, targetUp ).normalized;
+
+	   allowGravityChange = ( bool ) PreviewGravityDirectionChange?.Invoke ( targetForward, targetUp );
+    }
+
+    private void UpdatePlayerGravityAxesAfterPreview ( )
+    {
+	   gravityDirection = targetGravityDirection;
+	   up = -gravityDirection;
+	   forward = targetForward;
+	   right = targetRight;
 
 	   GravityDirectionChanged?.Invoke ( forward, up );
+    }
+
+    private Vector3 SnapToAxis ( Vector3 v )
+    {
+	   v.Normalize ( );
+
+	   float x = Mathf.Abs ( v.x );
+	   float y = Mathf.Abs ( v.y );
+	   float z = Mathf.Abs ( v.z );
+
+	   if ( x >= y && x >= z )
+		  return Mathf.Sign ( v.x ) * Vector3.right;
+
+	   if ( y >= x && y >= z )
+		  return Mathf.Sign ( v.y ) * Vector3.up;
+
+	   return Mathf.Sign ( v.z ) * Vector3.forward;
     }
 
     private void GravityChangeAction_started ( InputAction.CallbackContext obj )
@@ -67,7 +117,7 @@ public class GravityManipulator : MonoBehaviour
 
     private void GravityChangeAction_performed ( InputAction.CallbackContext obj )
     {
-	   cached = obj.ReadValue<Vector2> ( );
+	   OnGravityChanged ( obj.ReadValue<Vector2> ( ) );
     }
 
     private void GravityChangeAction_canceled ( InputAction.CallbackContext obj )
@@ -82,7 +132,10 @@ public class GravityManipulator : MonoBehaviour
 
     private void GravitySetAction_performed ( InputAction.CallbackContext obj )
     {
-	   OnGravityChanged ( cached );
+	   if ( allowGravityChange )
+	   {
+		  UpdatePlayerGravityAxesAfterPreview ( );
+	   }
     }
 
     private void GravitySetAction_canceled ( InputAction.CallbackContext obj )
@@ -94,26 +147,26 @@ public class GravityManipulator : MonoBehaviour
     {
 	   if ( _v.x > 0 )
 	   {
-		  gravityDirection = -right;
+		  targetGravityDirection = Vector3.ProjectOnPlane ( player.transform.right, -gravityDirection );
 	   }
 	   else if ( _v.x < 0 )
 	   {
-		  gravityDirection = right;
+		  targetGravityDirection = -Vector3.ProjectOnPlane ( player.transform.right, -gravityDirection );
 	   }
 	   else if ( _v.y > 0 )
 	   {
-		  gravityDirection = forward;
+		  targetGravityDirection = Vector3.ProjectOnPlane ( player.transform.forward, -gravityDirection );
 	   }
 	   else if ( _v.y < 0 )
 	   {
-		  gravityDirection = -forward;
+		  targetGravityDirection = -Vector3.ProjectOnPlane ( player.transform.forward, -gravityDirection );
 	   }
 	   else
 	   {
 		  return;
 	   }
 
-	   UpdateAxes ( );
+	   UpdateTargetAxes ( );
     }
 
     private void OnDisable ( )
@@ -140,12 +193,12 @@ public class GravityManipulator : MonoBehaviour
 	   Gizmos.DrawSphere ( transform.position, 0.1f );
 
 	   Gizmos.color = Color.green;
-	   Gizmos.DrawLine ( transform.position, transform.position + up );
+	   Gizmos.DrawLine ( transform.position, transform.position + targetUp );
 
 	   Gizmos.color = Color.red;
-	   Gizmos.DrawLine ( transform.position, transform.position + right );
+	   Gizmos.DrawLine ( transform.position, transform.position + targetRight );
 
 	   Gizmos.color = Color.blue;
-	   Gizmos.DrawLine ( transform.position, transform.position + forward );
+	   Gizmos.DrawLine ( transform.position, transform.position + targetForward );
     }
 }
