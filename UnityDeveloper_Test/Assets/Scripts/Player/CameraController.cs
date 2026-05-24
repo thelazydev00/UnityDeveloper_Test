@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class CameraController : MonoBehaviour
 {
+    [Header ( "Serialized References" )]
     [SerializeField] private Camera _camera;
     [SerializeField] private Transform cameraPivot;
     [SerializeField] private Transform _followTarget;
@@ -13,9 +14,9 @@ public class CameraController : MonoBehaviour
     private bool cameraFollowEnabled;
     private Vector3 cameraOffset;
 
-    private void Start ( )
+    // Cache the position offset to apply it back to the main transform
+    private void Awake ( )
     {
-	   InitializeCamera ( );
 	   cameraOffset = _followTarget.position - transform.position;
     }
 
@@ -37,14 +38,12 @@ public class CameraController : MonoBehaviour
 	   Quaternion targetRotation = Quaternion.LookRotation ( _followTarget.forward, _followTarget.up );
 	   transform.rotation = Quaternion.Slerp ( transform.rotation, targetRotation, 15f * Time.deltaTime );
 
-	   //Vector3 moveVector = _followTarget.position - transform.position;
-	   //transform.position += Vector3.MoveTowards ( Vector3.zero, moveVector, 1.5f * moveVector.magnitude * Time.deltaTime );
-
 	   transform.position = _followTarget.position - cameraOffset;
 
 	   RepositionCamera ( );
     }
 
+    // Simple Camera Obstacle Avoidance
     private void RepositionCamera ( )
     {
 	   Ray ray = new ( cameraPivot.position, -cameraPivot.forward );

@@ -1,8 +1,10 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+// The gravity manipulator script that changes Gravity according to the player input
 public class GravityManipulator : MonoBehaviour
 {
+    [Header ( "Serialized References" )]
     [SerializeField] private Player player;
     [SerializeField] private InputActionReference gravityChange;
     [SerializeField] private InputActionReference gravitySet;
@@ -42,11 +44,6 @@ public class GravityManipulator : MonoBehaviour
 	   gravitySet.action.canceled += GravitySetAction_canceled;
     }
 
-    private void Start ( )
-    {
-	   InitializeGravityManipulator ( );
-    }
-
     public void InitializeGravityManipulator ( )
     {
 	   targetUp = player.transform.up;
@@ -56,6 +53,7 @@ public class GravityManipulator : MonoBehaviour
 	   UpdatePlayerGravityAxesAfterPreview ( );
     }
 
+    // This updates the actual Axes of the player constrained to the Cube formed by the world/scene
     private void UpdateTargetAxes ( )
     {
 	   targetGravityDirection = SnapToAxis ( targetGravityDirection );
@@ -74,15 +72,13 @@ public class GravityManipulator : MonoBehaviour
 		  targetForward.Normalize ( );
 	   }
 
-	   //targetRight = Vector3.Cross ( targetForward, targetUp ).normalized;
-	   //targetForward = Vector3.Cross ( targetUp, targetRight ).normalized;
-
 	   targetRight = Vector3.Cross ( targetUp, targetForward ).normalized;
 	   targetForward = Vector3.Cross ( targetRight, targetUp ).normalized;
 
 	   allowGravityChange = ( bool ) PreviewGravityDirectionChange?.Invoke ( targetForward, targetUp );
     }
 
+    // Since the target axes are already calculated, this step is short but meaningful
     private void UpdatePlayerGravityAxesAfterPreview ( )
     {
 	   gravityDirection = targetGravityDirection;
@@ -93,6 +89,7 @@ public class GravityManipulator : MonoBehaviour
 	   GravityDirectionChanged?.Invoke ( forward, up );
     }
 
+    // The actual method that snaps arbitrary player based axis to the 3 World axes
     private Vector3 SnapToAxis ( Vector3 v )
     {
 	   v.Normalize ( );
@@ -186,19 +183,5 @@ public class GravityManipulator : MonoBehaviour
 	   gravitySet.action.started -= GravitySetAction_started;
 	   gravitySet.action.performed -= GravitySetAction_performed;
 	   gravitySet.action.canceled -= GravitySetAction_canceled;
-    }
-
-    private void OnDrawGizmos ( )
-    {
-	   Gizmos.DrawSphere ( transform.position, 0.1f );
-
-	   Gizmos.color = Color.green;
-	   Gizmos.DrawLine ( transform.position, transform.position + targetUp );
-
-	   Gizmos.color = Color.red;
-	   Gizmos.DrawLine ( transform.position, transform.position + targetRight );
-
-	   Gizmos.color = Color.blue;
-	   Gizmos.DrawLine ( transform.position, transform.position + targetForward );
     }
 }

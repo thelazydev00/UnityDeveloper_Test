@@ -10,7 +10,8 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float playerRotationSpeed = 45f;
     [SerializeField] private Animator myAnimator;
 
-    private Rigidbody myRb;
+    // Private member variables
+    private Rigidbody m_Rigidbody;
 
     private Vector2 input;
 
@@ -21,20 +22,22 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 frameUp;
     private Vector3 frameRight;
 
+    private float maxVelCache;
+
+    // Booleans to handle or flag states
     private bool isSwitchingGravity = false;
     private bool isGrounded = false;
     private bool isCharacterFalling = false;
+    private bool predictingDeath = false;
 
-    private float maxVelCache;
+    public bool AllowPlayerMovement { get; set; } = false;
 
-    private void Start ( )
-    {
-	   InitializePlayerMovement ( );
-    }
+    public System.Action<bool> PredictDeath;
 
+    // Initializes Player Movement
     public void InitializePlayerMovement ( )
     {
-	   myRb = GetComponent<Rigidbody> ( );
+	   m_Rigidbody = GetComponent<Rigidbody> ( );
 
 	   GravityManipulator.GravityDirectionChanged += OnGravityDirectionChanged;
 	   PlayerInputManager.MovementAction += SetMove;
@@ -44,59 +47,102 @@ public class PlayerMovement : MonoBehaviour
 	   frameUp = transform.up;
 	   frameRight = transform.right;
 
-	   maxVelCache = myRb.maxLinearVelocity;
+	   maxVelCache = m_Rigidbody.maxLinearVelocity;
     }
 
+    // If AllowPlayerMovement is false, we bail out as there's nothing else to do
     private void Update ( )
     {
+	   if ( !AllowPlayerMovement )
+	   {
+		  return;
+	   }
+
+	   // Ground Check for jumps and death prediction
 	   isGrounded = IsGrounded ( out float distanceToGround );
 
+	   // Updating moveDirection for smooth movement
 	   moveDirection = transform.forward * input.y + transform.right * input.x;
 
+	   // Projection allows the Vector to be transformed according to the modified gravity
 	   moveDirection = Vector3.ProjectOnPlane ( moveDirection, -gravityDirection );
+
+	   // Magnitud Clamping works better incase we expand the input system to include analog sticks
 	   moveDirection = Vector3.ClampMagnitude ( moveDirection, 1f );
 
+	   // Rotates towards the direction of movement while respecting the new gravity direction
 	   RotateTowardsMovement ( );
 
 	   if ( isGrounded )
 	   {
-		  // Stop Falling
+		  // Stop Falling and flag state
 		  if ( isCharacterFalling )
 		  {
 			 myAnimator.SetBool ( "isGrounded", isGrounded );
 			 isCharacterFalling = false;
-			 myRb.maxLinearVelocity = 5f;
+			 m_Rigidbody.maxLinearVelocity = 5f;
 		  }
 
-		  // Stop anticipating Death
-		  myAnimator.SetFloat ( "movement", Mathf.Clamp ( myRb.linearVelocity.magnitude / 5f, 0f, 5f ) );
+		  myAnimator.SetFloat ( "movement", Mathf.Clamp ( m_Rigidbody.linearVelocity.magnitude / 5f, 0f, 5f ) );
+
+		  // Stop predicting death
+		  //Debug.Log ( "Stopped Predicting Death" );
+		  if ( predictingDeath )
+		  {
+			 predictingDeath = false;
+			 PredictDeath?.Invoke ( predictingDeath );
+		  }
 	   }
 	   else
 	   {
-		  // Start Falling
+		  // Start Falling and flag state
 		  if ( !isCharacterFalling )
 		  {
 			 myAnimator.SetBool ( "isGrounded", isGrounded );
 			 isCharacterFalling = true;
-			 myRb.maxLinearVelocity = maxVelCache;
+			 m_Rigidbody.maxLinearVelocity = maxVelCache;
 		  }
 
-		  if ( distanceToGround > 25f )
+		  if ( distanceToGround > 20f )
 		  {
-			 // Start anticipating death
+			 // Start predicting death
+			 //Debug.Log ( $"Predicting Death" );
+			 if ( !predictingDeath )
+			 {
+				predictingDeath = true;
+				PredictDeath?.Invoke ( predictingDeath );
+			 }
+		  }
+		  else
+		  {
+			 // Stop predicting death
+			 //Debug.Log ( "Stopped Predicting Death" );
+			 if ( predictingDeath )
+			 {
+				predictingDeath = false;
+				PredictDeath?.Invoke ( predictingDeath );
+			 }
 		  }
 	   }
     }
 
+    // Bail out if AllowPlayerMovement is false
     private void FixedUpdate ( )
     {
+	   if ( !AllowPlayerMovement )
+	   {
+		  return;
+	   }
+
+	   // Do not add new forces until gravity direction is completely changed
 	   if ( !isSwitchingGravity )
 	   {
-		  myRb.AddForce ( gravityDirection * gravityMagnitude, ForceMode.Force );
-		  myRb.AddForce ( moveDirection * moveForce, ForceMode.Force );
+		  m_Rigidbody.AddForce ( gravityDirection * gravityMagnitude, ForceMode.Force );
+		  m_Rigidbody.AddForce ( moveDirection * moveForce, ForceMode.Force );
 	   }
     }
 
+    // Rotate towards intended move Direction while respecting the new gravity direction
     private void RotateTowardsMovement ( )
     {
 	   Vector3 faceDir = Vector3.ProjectOnPlane ( moveDirection, -gravityDirection );
@@ -107,11 +153,12 @@ public class PlayerMovement : MonoBehaviour
 	   Quaternion targetRotation =
 		  Quaternion.LookRotation ( faceDir.normalized, -gravityDirection );
 
-	   myRb.MoveRotation (
-		  Quaternion.RotateTowards ( myRb.rotation, targetRotation, 360f * playerRotationSpeed * Time.deltaTime )
+	   m_Rigidbody.MoveRotation (
+		  Quaternion.RotateTowards ( m_Rigidbody.rotation, targetRotation, 360f * playerRotationSpeed * Time.deltaTime )
 	   );
     }
 
+    // Handles changed gravity
     private void OnGravityDirectionChanged ( Vector3 forward, Vector3 up )
     {
 	   gravityDirection = -up;
@@ -126,6 +173,7 @@ public class PlayerMovement : MonoBehaviour
 	   }
     }
 
+    // handles orientation update after gravity is switched
     IEnumerator SwitchGravity ( )
     {
 	   //Quaternion targetRotation = Quaternion.LookRotation ( frameForward, frameUp );
@@ -133,25 +181,26 @@ public class PlayerMovement : MonoBehaviour
 
 	   isSwitchingGravity = true;
 
-	   myRb.linearVelocity = Vector3.zero;
-	   myRb.angularVelocity = Vector3.zero;
+	   m_Rigidbody.linearVelocity = Vector3.zero;
+	   m_Rigidbody.angularVelocity = Vector3.zero;
 
 	   float rotateSpeed = 360f;
 
-	   while ( Quaternion.Angle ( myRb.rotation, targetRotation ) > 0.1f )
+	   while ( Quaternion.Angle ( m_Rigidbody.rotation, targetRotation ) > 0.1f )
 	   {
-		  Quaternion newRotation = Quaternion.RotateTowards ( myRb.rotation, targetRotation, rotateSpeed * Time.fixedDeltaTime );
+		  Quaternion newRotation = Quaternion.RotateTowards ( m_Rigidbody.rotation, targetRotation, rotateSpeed * Time.fixedDeltaTime );
 
-		  myRb.MoveRotation ( newRotation );
+		  m_Rigidbody.MoveRotation ( newRotation );
 
 		  yield return new WaitForFixedUpdate ( );
 	   }
 
-	   myRb.MoveRotation ( targetRotation );
+	   m_Rigidbody.MoveRotation ( targetRotation );
 
 	   isSwitchingGravity = false;
     }
 
+    // Get control data for movement
     public void SetMove ( Vector2 _move )
     {
 	   //moveDirection.x = _move.x;
@@ -160,15 +209,17 @@ public class PlayerMovement : MonoBehaviour
 	   input = _move;
     }
 
+    // Jump is only valid when player is grounded
     public void Jump ( )
     {
 	   if ( isGrounded )
 	   {
-		  myRb.maxLinearVelocity = maxVelCache;
-		  myRb.AddForce ( -gravityDirection.normalized * jumpForce, ForceMode.Impulse );
+		  m_Rigidbody.maxLinearVelocity = maxVelCache;
+		  m_Rigidbody.AddForce ( -gravityDirection.normalized * jumpForce, ForceMode.Impulse );
 	   }
     }
 
+    // Method to check for ground contact and distance check
     private bool IsGrounded ( out float distanceToGround )
     {
 	   Ray ray = new ( transform.position + transform.up * 0.2f, -transform.up );

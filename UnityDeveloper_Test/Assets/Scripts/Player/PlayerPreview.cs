@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
+// This entire class handles orienting the hologram relative to the player
 public class PlayerPreview : MonoBehaviour
 {
     [SerializeField] private GameObject playerPreviewVisual;
