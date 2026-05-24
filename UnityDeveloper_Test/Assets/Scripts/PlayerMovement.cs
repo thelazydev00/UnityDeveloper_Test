@@ -12,6 +12,8 @@ public class PlayerMovement : MonoBehaviour
 
     private Rigidbody myRb;
 
+    private Vector2 input;
+
     private Vector3 moveDirection;
     private Vector3 gravityDirection;
 
@@ -22,6 +24,8 @@ public class PlayerMovement : MonoBehaviour
     private bool isSwitchingGravity = false;
     private bool isGrounded = false;
     private bool isCharacterFalling = false;
+
+    private float maxVelCache;
 
     private void Start ( )
     {
@@ -39,11 +43,18 @@ public class PlayerMovement : MonoBehaviour
 	   frameForward = transform.forward;
 	   frameUp = transform.up;
 	   frameRight = transform.right;
+
+	   maxVelCache = myRb.maxLinearVelocity;
     }
 
     private void Update ( )
     {
 	   isGrounded = IsGrounded ( out float distanceToGround );
+
+	   moveDirection = transform.forward * input.y + transform.right * input.x;
+
+	   moveDirection = Vector3.ProjectOnPlane ( moveDirection, -gravityDirection );
+	   moveDirection = Vector3.ClampMagnitude ( moveDirection, 1f );
 
 	   RotateTowardsMovement ( );
 
@@ -54,10 +65,11 @@ public class PlayerMovement : MonoBehaviour
 		  {
 			 myAnimator.SetBool ( "isGrounded", isGrounded );
 			 isCharacterFalling = false;
+			 myRb.maxLinearVelocity = 5f;
 		  }
 
 		  // Stop anticipating Death
-		  myAnimator.SetFloat ( "movement", Mathf.Clamp ( myRb.linearVelocity.magnitude / 2f, 0f, 5f ) );
+		  myAnimator.SetFloat ( "movement", Mathf.Clamp ( myRb.linearVelocity.magnitude / 5f, 0f, 5f ) );
 	   }
 	   else
 	   {
@@ -66,6 +78,7 @@ public class PlayerMovement : MonoBehaviour
 		  {
 			 myAnimator.SetBool ( "isGrounded", isGrounded );
 			 isCharacterFalling = true;
+			 myRb.maxLinearVelocity = maxVelCache;
 		  }
 
 		  if ( distanceToGround > 25f )
@@ -143,17 +156,15 @@ public class PlayerMovement : MonoBehaviour
     {
 	   //moveDirection.x = _move.x;
 	   //moveDirection.z = _move.y;
-	   moveDirection = transform.forward * _move.y + transform.right * _move.x;
 
-	   moveDirection = Vector3.ProjectOnPlane ( moveDirection, -gravityDirection );
-	   moveDirection = Vector3.ClampMagnitude ( moveDirection, 1f );
-	   myRb.AddForce ( moveDirection, ForceMode.Force );
+	   input = _move;
     }
 
     public void Jump ( )
     {
 	   if ( isGrounded )
 	   {
+		  myRb.maxLinearVelocity = maxVelCache;
 		  myRb.AddForce ( -gravityDirection.normalized * jumpForce, ForceMode.Impulse );
 	   }
     }
