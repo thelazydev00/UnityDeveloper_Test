@@ -12,10 +12,14 @@ public class PlayerInputManager : MonoBehaviour
     [SerializeField] private InputActionReference movement;
     [SerializeField] private InputActionReference jump;
     [SerializeField] private InputActionReference mouseLook;
+
+    [Header ( "Input Refinements" )]
+    [SerializeField][Range ( 1f, 100f )] private float mouseSensitivity = 1f;
     #endregion
 
     public static System.Action<Vector2> MovementAction;
     public static System.Action JumpAction;
+    public static System.Action<Vector2> MouseLookAction;
 
     private void OnEnable ( )
     {
@@ -32,6 +36,25 @@ public class PlayerInputManager : MonoBehaviour
 	   movement.action.started += MovementAction_started;
 	   movement.action.performed += MovementAction_performed;
 	   movement.action.canceled += MovementAction_canceled;
+
+	   mouseLook.action.started += MouseLookAction_started;
+	   mouseLook.action.performed += MouseLookAction_performed;
+	   mouseLook.action.canceled += MouseLookAction_canceled;
+    }
+
+    private void MouseLookAction_started ( InputAction.CallbackContext obj )
+    {
+	   
+    }
+
+    private void MouseLookAction_performed ( InputAction.CallbackContext obj )
+    {
+	   MouseLookAction?.Invoke ( obj.ReadValue<Vector2> ( ) * mouseSensitivity );
+    }
+
+    private void MouseLookAction_canceled ( InputAction.CallbackContext obj )
+    {
+	   MouseLookAction?.Invoke ( obj.ReadValue<Vector2> ( ) * mouseSensitivity );
     }
 
     public void EnableJump ( )

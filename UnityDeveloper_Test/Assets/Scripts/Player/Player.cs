@@ -4,6 +4,7 @@ using UnityEngine;
 public class Player : MonoBehaviour
 {
     [Header ( "Serialized References" )]
+    [SerializeField] private CameraController cameraController;
     [SerializeField] private PlayerMovement playerMovement;
     [SerializeField] private PlayerPreview playerPreview;
 
@@ -17,7 +18,8 @@ public class Player : MonoBehaviour
 
     public void InitializePlayer ( )
     {
-	   playerMovement.InitializePlayerMovement ( );
+	   playerMovement.InitializePlayerMovement ( cameraController );
+	   cameraController.InitializeCamera ( );
 	   playerPreview.InitializePlayerPreview ( );
 	   MaySurvive = false;
 	   predictingDeath = false;
@@ -25,7 +27,11 @@ public class Player : MonoBehaviour
 	   playerMovement.PredictDeath += HandleDeathPrediction;
     }
 
-    public void AllowPlayerMovement ( bool isAllowed ) => playerMovement.AllowPlayerMovement = isAllowed;
+    public void AllowPlayerMovement ( bool isAllowed )
+    {
+	   playerMovement.AllowPlayerMovement = isAllowed;
+	   cameraController.AllowCameraMovement ( isAllowed );
+    }
 
     // Handles the prediction of death.
     private void HandleDeathPrediction ( bool _predictDeath )

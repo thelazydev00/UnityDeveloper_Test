@@ -1240,9 +1240,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1bdbaee64eadd8f489aeef2a606aadcb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Player
+  cameraController: {fileID: 1366239161}
   playerMovement: {fileID: 248651445}
   playerPreview: {fileID: 248651449}
-  countdownTimeToDeath: 20
+  countdownTimeToDeath: 10
   timer: 0
 --- !u!136 &248651447
 CapsuleCollider:
@@ -1663,7 +1664,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0.5, z: -4}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1744,6 +1745,38 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 666896910}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &338532476
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 338532477}
+  m_Layer: 0
+  m_Name: CameraPitch
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &338532477
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 338532476}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 2096978331}
+  m_Father: {fileID: 1900642800}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &340979068
 GameObject:
@@ -6933,7 +6966,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 2096978331}
+  - {fileID: 1900642800}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!114 &1366239161
@@ -6950,6 +6983,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CameraController
   _camera: {fileID: 330585545}
   cameraPivot: {fileID: 2096978331}
+  cameraYaw: {fileID: 1900642800}
+  cameraPitch: {fileID: 338532477}
   _followTarget: {fileID: 1352399154}
   maxDistance: 4
   targetDistance: 0
@@ -9041,6 +9076,7 @@ MonoBehaviour:
   jump: {fileID: -4570583892807808378, guid: 75c571deb967a064ba7538e6307883dd, type: 3}
   mouseLook: {fileID: -6551977140868970310, guid: 75c571deb967a064ba7538e6307883dd,
     type: 3}
+  mouseSensitivity: 1
 --- !u!114 &1849446520
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9386,6 +9422,38 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1898269246}
   m_CullTransparentMesh: 1
+--- !u!1 &1900642799
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1900642800}
+  m_Layer: 0
+  m_Name: CameraYaw
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1900642800
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1900642799}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 338532477}
+  m_Father: {fileID: 1366239160}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1904652246
 GameObject:
   m_ObjectHideFlags: 0
@@ -9794,7 +9862,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 330585546}
-  m_Father: {fileID: 1366239160}
+  m_Father: {fileID: 338532477}
   m_LocalEulerAnglesHint: {x: 15, y: 0, z: 0}
 --- !u!1 &2101017235
 GameObject:

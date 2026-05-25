@@ -34,9 +34,8 @@ public class GameManager : MonoBehaviour
     private void Start ( )
     {
 	   player.InitializePlayer ( );
-	   cameraController.InitializeCamera ( );
 	   player.PlayerDied += ( ) => isGameRunning = false;
-	   gravityManipulator.InitializeGravityManipulator ( );
+	   //gravityManipulator.InitializeGravityManipulator ( );
 	   collectablesManager.Initialize ( this );
 	   collectionPercent = 0f;
 	   uiManager.Initialize ( collectablesManager.Collectibles.Count );
@@ -45,6 +44,7 @@ public class GameManager : MonoBehaviour
     // Method to start a 3 second countdown before the round starts
     private void StartCountdown ( )
     {
+	   gravityManipulator.InitializeGravityManipulator ( );
 	   StartCoroutine ( CountDown ( ) );
 	   UIManager.StartPressed -= StartCountdown;
     }
@@ -86,7 +86,9 @@ public class GameManager : MonoBehaviour
     IEnumerator Timer ( )
     {
 	   isGameRunning = true;
+	   
 	   player.AllowPlayerMovement ( isGameRunning );
+	   gravityManipulator.AllowGravityChange ( isGameRunning );
 
 	   uiManager.InitializeTimer ( );
 	   uiManager.ShowTimer ( );
@@ -114,6 +116,7 @@ public class GameManager : MonoBehaviour
 	   yield return new WaitForSeconds ( 0.5f );
 
 	   player.AllowPlayerMovement ( isGameRunning );
+	   gravityManipulator.AllowGravityChange( isGameRunning );
 
 	   yield return new WaitForSeconds ( 0.5f );
 

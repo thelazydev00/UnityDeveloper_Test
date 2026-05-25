@@ -23,7 +23,8 @@ public class GravityManipulator : MonoBehaviour
     private Vector3 forward;
     private Vector3 right;
 
-    private bool allowGravityChange = true;
+    private bool allowGravityChange = false;
+    private bool allowGravitySet = true;
 
     private void OnEnable ( )
     {
@@ -53,6 +54,11 @@ public class GravityManipulator : MonoBehaviour
 	   UpdatePlayerGravityAxesAfterPreview ( );
     }
 
+    public void AllowGravityChange ( bool allowed )
+    {
+	   allowGravityChange = allowed;
+    }
+
     // This updates the actual Axes of the player constrained to the Cube formed by the world/scene
     private void UpdateTargetAxes ( )
     {
@@ -75,7 +81,7 @@ public class GravityManipulator : MonoBehaviour
 	   targetRight = Vector3.Cross ( targetUp, targetForward ).normalized;
 	   targetForward = Vector3.Cross ( targetRight, targetUp ).normalized;
 
-	   allowGravityChange = ( bool ) PreviewGravityDirectionChange?.Invoke ( targetForward, targetUp );
+	   allowGravitySet = ( bool ) PreviewGravityDirectionChange?.Invoke ( targetForward, targetUp );
     }
 
     // Since the target axes are already calculated, this step is short but meaningful
@@ -129,7 +135,7 @@ public class GravityManipulator : MonoBehaviour
 
     private void GravitySetAction_performed ( InputAction.CallbackContext obj )
     {
-	   if ( allowGravityChange )
+	   if ( allowGravitySet )
 	   {
 		  UpdatePlayerGravityAxesAfterPreview ( );
 	   }

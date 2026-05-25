@@ -11,7 +11,10 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Animator myAnimator;
 
     // Private member variables
+    private CameraController cameraController;
     private Rigidbody m_Rigidbody;
+    private Transform cameraForwardReference;
+    private Transform cameraTransform;
 
     private Vector2 input;
 
@@ -35,9 +38,12 @@ public class PlayerMovement : MonoBehaviour
     public System.Action<bool> PredictDeath;
 
     // Initializes Player Movement
-    public void InitializePlayerMovement ( )
+    public void InitializePlayerMovement ( CameraController cameraController )
     {
 	   m_Rigidbody = GetComponent<Rigidbody> ( );
+	   this.cameraController = cameraController;
+	   cameraForwardReference = this.cameraController.CameraForwardReference;
+	   cameraTransform = this.cameraController.transform;
 
 	   GravityManipulator.GravityDirectionChanged += OnGravityDirectionChanged;
 	   PlayerInputManager.MovementAction += SetMove;
@@ -62,7 +68,7 @@ public class PlayerMovement : MonoBehaviour
 	   isGrounded = IsGrounded ( out float distanceToGround );
 
 	   // Updating moveDirection for smooth movement
-	   moveDirection = transform.forward * input.y + transform.right * input.x;
+	   moveDirection = cameraForwardReference.forward * input.y + cameraForwardReference.right * input.x;
 
 	   // Projection allows the Vector to be transformed according to the modified gravity
 	   moveDirection = Vector3.ProjectOnPlane ( moveDirection, -gravityDirection );
@@ -103,26 +109,28 @@ public class PlayerMovement : MonoBehaviour
 			 m_Rigidbody.maxLinearVelocity = maxVelCache;
 		  }
 
-		  if ( distanceToGround > 20f )
+		  if ( !predictingDeath )
 		  {
-			 // Start predicting death
-			 //Debug.Log ( $"Predicting Death" );
-			 if ( !predictingDeath )
-			 {
-				predictingDeath = true;
-				PredictDeath?.Invoke ( predictingDeath );
-			 }
+			 predictingDeath = true;
+			 PredictDeath?.Invoke ( predictingDeath );
 		  }
-		  else
-		  {
-			 // Stop predicting death
-			 //Debug.Log ( "Stopped Predicting Death" );
-			 if ( predictingDeath )
-			 {
-				predictingDeath = false;
-				PredictDeath?.Invoke ( predictingDeath );
-			 }
-		  }
+
+		  //if ( distanceToGround > 20f )
+		  //{
+			 //// Start predicting death
+			 ////Debug.Log ( $"Predicting Death" );
+			 
+		  //}
+		  //else
+		  //{
+			 //// Stop predicting death
+			 ////Debug.Log ( "Stopped Predicting Death" );
+			 //if ( predictingDeath )
+			 //{
+				//predictingDeath = false;
+				//PredictDeath?.Invoke ( predictingDeath );
+			 //}
+		  //}
 	   }
     }
 
@@ -150,12 +158,13 @@ public class PlayerMovement : MonoBehaviour
 	   if ( faceDir.sqrMagnitude < 0.001f )
 		  return;
 
-	   Quaternion targetRotation =
-		  Quaternion.LookRotation ( faceDir.normalized, -gravityDirection );
+	   Quaternion targetRotation = Quaternion.LookRotation ( faceDir.normalized, -gravityDirection );
 
 	   m_Rigidbody.MoveRotation (
 		  Quaternion.RotateTowards ( m_Rigidbody.rotation, targetRotation, 360f * playerRotationSpeed * Time.deltaTime )
 	   );
+
+	   cameraController.MovedThisFrame = true;
     }
 
     // Handles changed gravity
@@ -189,6 +198,9 @@ public class PlayerMovement : MonoBehaviour
 	   while ( Quaternion.Angle ( m_Rigidbody.rotation, targetRotation ) > 0.1f )
 	   {
 		  Quaternion newRotation = Quaternion.RotateTowards ( m_Rigidbody.rotation, targetRotation, rotateSpeed * Time.fixedDeltaTime );
+
+		  //Quaternion targetRotation = Quaternion.LookRotation ( _followTarget.forward, _followTarget.up );
+		  cameraTransform.rotation = Quaternion.Slerp ( cameraTransform.rotation, targetRotation, 15f * Time.fixedDeltaTime );
 
 		  m_Rigidbody.MoveRotation ( newRotation );
 
