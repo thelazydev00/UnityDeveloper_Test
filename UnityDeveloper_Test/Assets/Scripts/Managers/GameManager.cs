@@ -8,6 +8,7 @@ public class GameManager : MonoBehaviour
     [Header ( "Serialized References" )]
     [SerializeField] private InputActionReference exit; // To Do Implement a Pause/Exit Menu
     [SerializeField] private UIManager uiManager;
+    [SerializeField] private PlayerInputManager playerInputManager;
     [SerializeField] private Player player;
     [SerializeField] private CameraController cameraController;
     [SerializeField] private GravityManipulator gravityManipulator;
@@ -20,9 +21,17 @@ public class GameManager : MonoBehaviour
     // Float value used to evaluate collection progress
     private float collectionPercent = 0f;
 
+    // Set the reference for gravity manipulator to flip by
+    // Player is used by default
+    private static bool useCameraReferenceForGravity = false;
+
     private void Awake ( )
     {
 	   UIManager.StartPressed += StartCountdown;
+	   UIManager.MouseXChanged += playerInputManager.SetInvertMouseX;
+	   UIManager.MouseYChanged += playerInputManager.SetInvertMouseY;
+	   UIManager.MouseSensitivityChanged += playerInputManager.SetMouseSensitivity;
+	   UIManager.GravityReferenceChanged += SetUseCameraReferenceForGravity;
     }
 
     private void OnEnable ( )
@@ -38,14 +47,27 @@ public class GameManager : MonoBehaviour
 	   //gravityManipulator.InitializeGravityManipulator ( );
 	   collectablesManager.Initialize ( this );
 	   collectionPercent = 0f;
-	   uiManager.Initialize ( collectablesManager.Collectibles.Count );
+	   uiManager.Initialize ( collectablesManager.Collectibles.Count, playerInputManager.PlayerInputRefinements, useCameraReferenceForGravity );
+    }
+
+    private void SetUseCameraReferenceForGravity ( bool useCameraReferenceForGravity )
+    {
+	   GameManager.useCameraReferenceForGravity = useCameraReferenceForGravity;
     }
 
     // Method to start a 3 second countdown before the round starts
     private void StartCountdown ( )
     {
-	   gravityManipulator.InitializeGravityManipulator ( );
+	   Transform referenceTransform = useCameraReferenceForGravity ? cameraController.CameraForwardReference : player.transform;
+	   gravityManipulator.InitializeGravityManipulator ( referenceTransform );
+
+	   UIManager.MouseXChanged -= playerInputManager.SetInvertMouseX;
+	   UIManager.MouseYChanged -= playerInputManager.SetInvertMouseY;
+	   UIManager.GravityReferenceChanged -= SetUseCameraReferenceForGravity;
+	   UIManager.MouseSensitivityChanged -= playerInputManager.SetMouseSensitivity;
+	   
 	   StartCoroutine ( CountDown ( ) );
+	   
 	   UIManager.StartPressed -= StartCountdown;
     }
 

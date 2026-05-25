@@ -14,8 +14,20 @@ public class PlayerInputManager : MonoBehaviour
     [SerializeField] private InputActionReference mouseLook;
 
     [Header ( "Input Refinements" )]
-    [SerializeField][Range ( 1f, 100f )] private float mouseSensitivity = 1f;
+    [Range ( 0.01f, 1f )] public float mouseSensitivity = 0.1f;
+    public float MouseSensitivity => _mouseSensitivity < 0 ? mouseSensitivity : _mouseSensitivity;
+    
+    public bool InvertMouseX => inversionVector.x < 0;
+
+    public bool InvertMouseY => inversionVector.y < 0;
+
+    private static Vector2 inversionVector = Vector2.one;
+
+    public PlayerInputRefinements PlayerInputRefinements => new ( MouseSensitivity, mouseSensitivityMin, InvertMouseX, InvertMouseY );
     #endregion
+
+    private float mouseSensitivityMin = 0.01f;
+    private static float _mouseSensitivity = -1f;
 
     public static System.Action<Vector2> MovementAction;
     public static System.Action JumpAction;
@@ -42,6 +54,22 @@ public class PlayerInputManager : MonoBehaviour
 	   mouseLook.action.canceled += MouseLookAction_canceled;
     }
 
+    public void SetInvertMouseX( bool invertMouseX )
+    {
+	   inversionVector.x = invertMouseX ? -1f : 1f;
+    }
+
+    public void SetInvertMouseY ( bool invertMouseY )
+    {
+	   inversionVector.y = invertMouseY ? -1f : 1f;
+    }
+
+    public void SetMouseSensitivity ( float mouseSensitivity )
+    {
+	   this.mouseSensitivity = mouseSensitivity;
+	   _mouseSensitivity = mouseSensitivity;
+    }
+
     private void MouseLookAction_started ( InputAction.CallbackContext obj )
     {
 	   
@@ -49,12 +77,22 @@ public class PlayerInputManager : MonoBehaviour
 
     private void MouseLookAction_performed ( InputAction.CallbackContext obj )
     {
-	   MouseLookAction?.Invoke ( obj.ReadValue<Vector2> ( ) * mouseSensitivity );
+	   Vector2 mouseLook = obj.ReadValue<Vector2> ( );
+
+	   mouseLook.x *= inversionVector.x;
+	   mouseLook.y *= inversionVector.y;
+
+	   MouseLookAction?.Invoke ( mouseLook * MouseSensitivity );
     }
 
     private void MouseLookAction_canceled ( InputAction.CallbackContext obj )
     {
-	   MouseLookAction?.Invoke ( obj.ReadValue<Vector2> ( ) * mouseSensitivity );
+	   Vector2 mouseLook = obj.ReadValue<Vector2> ( );
+
+	   mouseLook.x *= inversionVector.x;
+	   mouseLook.y *= inversionVector.y;
+
+	   MouseLookAction?.Invoke ( mouseLook * MouseSensitivity );
     }
 
     public void EnableJump ( )
@@ -118,4 +156,27 @@ public class PlayerInputManager : MonoBehaviour
 	   jump.action.Disable ( );
     }
     #endregion
+}
+
+public struct PlayerInputRefinements
+{
+    private float mouseSensitivity;
+    public float MouseSensitivity => mouseSensitivity;
+
+    private float mouseSensitivityMin;
+    public float MouseSensitivityMin => mouseSensitivityMin;
+
+    private bool invertMouseX;
+    public bool InvertMouseX => invertMouseX;
+
+    private bool invertMouseY;
+    public bool InvertMouseY => invertMouseY;
+
+    public PlayerInputRefinements ( float mouseSensitivity, float mouseSensitivityMin, bool invertMouseX, bool invertMouseY )
+    {
+	   this.mouseSensitivity = mouseSensitivity;
+	   this.mouseSensitivityMin = mouseSensitivityMin;
+	   this.invertMouseX = invertMouseX;
+	   this.invertMouseY = invertMouseY;
+    }
 }

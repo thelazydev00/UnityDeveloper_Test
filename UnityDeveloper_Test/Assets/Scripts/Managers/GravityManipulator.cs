@@ -5,9 +5,11 @@ using UnityEngine.InputSystem;
 public class GravityManipulator : MonoBehaviour
 {
     [Header ( "Serialized References" )]
-    [SerializeField] private Player player;
     [SerializeField] private InputActionReference gravityChange;
     [SerializeField] private InputActionReference gravitySet;
+
+    // Private references
+    private Transform reference;
 
     private Vector3 gravityDirection = Vector3.down;
     private Vector3 targetGravityDirection = Vector3.down;
@@ -45,10 +47,11 @@ public class GravityManipulator : MonoBehaviour
 	   gravitySet.action.canceled += GravitySetAction_canceled;
     }
 
-    public void InitializeGravityManipulator ( )
+    public void InitializeGravityManipulator ( Transform _referenceTransform )
     {
-	   targetUp = player.transform.up;
-	   targetForward = player.transform.forward;
+	   reference = _referenceTransform;
+	   targetUp = reference.up;
+	   targetForward = reference.forward;
 
 	   UpdateTargetAxes ( );
 	   UpdatePlayerGravityAxesAfterPreview ( );
@@ -66,7 +69,7 @@ public class GravityManipulator : MonoBehaviour
 
 	   targetUp = -targetGravityDirection;
 
-	   targetForward = Vector3.ProjectOnPlane ( player.transform.forward, targetUp ).normalized;
+	   targetForward = Vector3.ProjectOnPlane ( reference.forward, targetUp ).normalized;
 
 	   if ( targetForward.sqrMagnitude < 0.01f )
 	   {
@@ -120,7 +123,10 @@ public class GravityManipulator : MonoBehaviour
 
     private void GravityChangeAction_performed ( InputAction.CallbackContext obj )
     {
-	   OnGravityChanged ( obj.ReadValue<Vector2> ( ) );
+	   if ( allowGravityChange )
+	   {
+		  OnGravityChanged ( obj.ReadValue<Vector2> ( ) );
+	   }
     }
 
     private void GravityChangeAction_canceled ( InputAction.CallbackContext obj )
@@ -150,19 +156,19 @@ public class GravityManipulator : MonoBehaviour
     {
 	   if ( _v.x > 0 )
 	   {
-		  targetGravityDirection = Vector3.ProjectOnPlane ( player.transform.right, -gravityDirection );
+		  targetGravityDirection = Vector3.ProjectOnPlane ( reference.right, -gravityDirection );
 	   }
 	   else if ( _v.x < 0 )
 	   {
-		  targetGravityDirection = -Vector3.ProjectOnPlane ( player.transform.right, -gravityDirection );
+		  targetGravityDirection = -Vector3.ProjectOnPlane ( reference.right, -gravityDirection );
 	   }
 	   else if ( _v.y > 0 )
 	   {
-		  targetGravityDirection = Vector3.ProjectOnPlane ( player.transform.forward, -gravityDirection );
+		  targetGravityDirection = Vector3.ProjectOnPlane ( reference.forward, -gravityDirection );
 	   }
 	   else if ( _v.y < 0 )
 	   {
-		  targetGravityDirection = -Vector3.ProjectOnPlane ( player.transform.forward, -gravityDirection );
+		  targetGravityDirection = -Vector3.ProjectOnPlane ( reference.forward, -gravityDirection );
 	   }
 	   else
 	   {

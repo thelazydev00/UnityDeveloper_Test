@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
 {
@@ -8,7 +9,13 @@ public class UIManager : MonoBehaviour
     public static System.Action RestartPressed;
     public static System.Action ExitPressed;
 
+    public static System.Action<bool> MouseXChanged;
+    public static System.Action<bool> MouseYChanged;
+    public static System.Action<bool> GravityReferenceChanged;
+    public static System.Action<float> MouseSensitivityChanged;
+
     [Header ( "Serialized References" )]
+    [SerializeField] private OptionsUI optionsUI;
     [SerializeField] private CounterUI counterUI;
     [SerializeField] private TimerUI timerUI;
     [SerializeField] private ScoreUI scoreUI;
@@ -24,14 +31,42 @@ public class UIManager : MonoBehaviour
 	   StartPressed?.Invoke ( );
     }
 
-    public void Initialize ( int maxScore )
+    public void Initialize ( int maxScore, PlayerInputRefinements playerInputRefinements, bool cameraGravityReference )
     {
 	   this.maxScore = maxScore;
+	   optionsUI.Initialize ( playerInputRefinements, cameraGravityReference );
+
+	   optionsUI.MouseXToggle += OnMouseXChanged;
+	   optionsUI.MouseYToggle += OnMouseYChanged;
+	   optionsUI.MouseSensitivityChanged += OnMouseSensitivityChanged;
+	   optionsUI.GravityReferenceToggle += OnGravityReferenceChanged;
+
 	   counterUI.Hide ( );
 	   timerUI.Hide ( );
 	   scoreUI.Hide ( );
 	   gameOverUI.Hide ( );
     }
+    #region Methods for OptionsUI
+    public void OnMouseXChanged ( bool value )
+    {
+	   MouseXChanged?.Invoke ( value );
+    }
+
+    public void OnMouseYChanged ( bool value )
+    {
+	   MouseYChanged?.Invoke ( value );
+    }
+
+    public void OnMouseSensitivityChanged( float value )
+    {
+	   MouseSensitivityChanged?.Invoke ( value );
+    }
+
+    public void OnGravityReferenceChanged ( bool value )
+    {
+	   GravityReferenceChanged?.Invoke ( value );
+    }
+    #endregion
 
     // This is referenced by a Unity Button in the Editor
     public void RestartGame ( )
@@ -71,6 +106,16 @@ public class UIManager : MonoBehaviour
     {
 	   gameOverUI.Initialize ( );
 	   gameOverUI.Display ( timeRemaining, score, maxScore );
+    }
+
+    private void OnDestroy ( )
+    {
+	   optionsUI.OnDestroy ( );
+
+	   optionsUI.MouseXToggle -= OnMouseXChanged;
+	   optionsUI.MouseYToggle -= OnMouseYChanged;
+	   optionsUI.MouseSensitivityChanged -= OnMouseSensitivityChanged;
+	   optionsUI.GravityReferenceToggle -= OnGravityReferenceChanged;
     }
 }
 
@@ -222,5 +267,74 @@ public class GameOverUI
 	   playerWin.gameObject.SetActive ( false );
 	   playerLost.gameObject.SetActive ( false );
 	   gameOverRoot.gameObject.SetActive ( false );
+    }
+}
+
+[System.Serializable]
+public class OptionsUI
+{
+    [SerializeField] private Toggle mouseXToggle;
+    [SerializeField] private Toggle mouseYToggle;
+    [SerializeField] private Toggle gravityReferenceToggle;
+    [SerializeField] private Slider mouseSensitivitySlider;
+    [SerializeField] private TextMeshProUGUI mouseSensitivityText;
+
+    private float mouseSensitivityMin;
+
+    public System.Action<bool> MouseXToggle;
+    public System.Action<bool> MouseYToggle;
+    public System.Action<bool> GravityReferenceToggle;
+    public System.Action<float> MouseSensitivityChanged;
+
+    public void Initialize ( PlayerInputRefinements playerInputRefinements, bool cameraGravityReference )
+    {
+	   mouseXToggle.isOn = playerInputRefinements.InvertMouseX;
+	   mouseYToggle.isOn = playerInputRefinements.InvertMouseY;
+	   gravityReferenceToggle.isOn = cameraGravityReference;
+
+	   mouseSensitivitySlider.normalizedValue = playerInputRefinements.MouseSensitivity;
+
+	   Debug.Log ( $"{playerInputRefinements.MouseSensitivity}, {mouseSensitivitySlider.value}" );
+
+	   mouseSensitivityMin = playerInputRefinements.MouseSensitivityMin;
+
+	   mouseSensitivityText.text = ( playerInputRefinements.MouseSensitivity / mouseSensitivityMin ).ToString ( "F0" );
+
+	   mouseXToggle.onValueChanged.AddListener ( OnMouseXToggle );
+	   mouseYToggle.onValueChanged.AddListener ( OnMouseYToggle );
+	   gravityReferenceToggle.onValueChanged.AddListener ( OnGravityReferenceToggle );
+
+	   mouseSensitivitySlider.onValueChanged.AddListener ( OnMouseSensitivitySliderChanged );
+    }
+
+    private void OnMouseXToggle ( bool value )
+    {
+	   MouseXToggle?.Invoke ( value );
+    }
+
+    private void OnMouseYToggle ( bool value )
+    {
+	   MouseYToggle?.Invoke ( value );
+    }
+
+    private void OnGravityReferenceToggle ( bool value )
+    {
+	   GravityReferenceToggle?.Invoke ( value );
+    }
+
+    private void OnMouseSensitivitySliderChanged ( float value )
+    {
+	   mouseSensitivityText.text = ( value ).ToString ( "F0" );
+
+	   MouseSensitivityChanged?.Invoke ( value * mouseSensitivityMin );
+    }
+
+    public void OnDestroy ( )
+    {
+	   mouseXToggle.onValueChanged.RemoveAllListeners ( );
+	   mouseYToggle.onValueChanged.RemoveAllListeners ( );
+	   gravityReferenceToggle.onValueChanged.RemoveAllListeners ( );
+
+	   mouseSensitivitySlider.onValueChanged.RemoveAllListeners ( );
     }
 }
